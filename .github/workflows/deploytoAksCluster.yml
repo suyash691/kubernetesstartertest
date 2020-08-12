@@ -1,0 +1,50 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: nodecontainerappacr.azurecr.io
+        username: ${{ secrets.acr_nodecontainerappacr_username }}
+        password: ${{ secrets.acr_nodecontainerappacr_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t nodecontainerappacr.azurecr.io/helloworld:${{ github.sha }}
+        docker push nodecontainerappacr.azurecr.io/helloworld:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_helloworld_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep helloworld4eee | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace helloworld4eee`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: helloworld4eee
+        container-registry-url: nodecontainerappacr.azurecr.io
+        container-registry-username: ${{ secrets.acr_nodecontainerappacr_username }}
+        container-registry-password: ${{ secrets.acr_nodecontainerappacr_password }}
+        secret-name: helloworlddockerauth
+       
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: helloworld4eee
+        manifests: |
+          manifests/deployment.yml
+          manifests/service.yml
+        images: |
+          nodecontainerappacr.azurecr.io/helloworld:${{ github.sha }}
+        imagepullsecrets: |
+          helloworlddockerauth
