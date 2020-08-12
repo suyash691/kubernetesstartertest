@@ -9,6 +9,8 @@ spec:
       labels:
         app: "helloworld-fadd"
     spec:
+      selector:
+          name: helloworld-fadd
       containers:
         - name: "helloworld-fadd"
           image: "nodecontainerappacr.azurecr.io/helloworld"
