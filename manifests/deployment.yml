@@ -11,9 +11,9 @@ spec:
     metadata:
       labels:
         app: "helloworld-fadd"
-      spec:
-        containers:
-           - name: "helloworld-fadd"
-             image: "nodecontainerappacr.azurecr.io/helloworld"
-             ports:
-             - containerPort: 8080
+    spec:
+      containers:
+      - name: "helloworld-fadd"
+         image: "nodecontainerappacr.azurecr.io/helloworld"
+         ports:
+         - containerPort: 8080
