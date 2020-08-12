@@ -4,13 +4,12 @@ metadata:
   name: "helloworld-fadd"
 spec:
   replicas: 2
+  selector:
+    name: helloworld-fadd
   template:
     metadata:
       labels:
         app: "helloworld-fadd"
-    spec:
-      selector:
-          name: helloworld-fadd
       containers:
         - name: "helloworld-fadd"
           image: "nodecontainerappacr.azurecr.io/helloworld"
