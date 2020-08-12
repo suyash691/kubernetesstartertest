@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "helloworld-fadd"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "helloworld-fadd"
+    spec:
+      containers:
+        - name: "helloworld-fadd"
+          image: "nodecontainerappacr.azurecr.io/helloworld"
+          ports:
+          - containerPort: 8080
