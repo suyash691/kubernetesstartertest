@@ -38,8 +38,8 @@ jobs:
         inlineScript: |
           echo "::set-output name=acrusername::`az acr credential show -n ${{ env.registryName }} --query username`"
           echo "::add-mask::`az acr credential show -n ${{ env.registryName }} --query username`"
-          echo "::set-output name=acrpassword::`az acr credential show -n MyRegistry --query passwords[0].value`"
-          echo "::add-mask::`az acr credential show -n MyRegistry --query passwords[0].value`"
+          echo "::set-output name=acrpassword::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
+          echo "::add-mask::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
