@@ -30,3 +30,7 @@ jobs:
       with:
         inlineScript: |
           az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/containerRegistry-template.json --parameters  registryName="${{ env.registryName }}" registryLocation="${{ env.registryLocation }}"  registrySku="${{ env.registrySku }}"
+    - name: Login to ACR
+    - uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.registryName }}.azurecr.io
