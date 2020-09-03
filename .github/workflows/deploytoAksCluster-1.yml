@@ -50,15 +50,10 @@ jobs:
           az acr create -n ${{ env.registryName }} -g ${{ env.RESOURCEGROUPNAME }} --location "${{env.registryLocation}}" --sku ${{env.registrySku}} --admin-enabled
           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username`"
           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
-    - name: Login to ACR
-      uses: azure/docker-login@v1
-      with:
-        login-server: ${{ env.registryName }}.azurecr.io
-        username: ${{ steps.createACR.outputs.acr_username }}
-        password: ${{ steps.createACR.outputs.acr_password }}
     - name: Build and push image to ACR
       id: build-image
       run: |
+        docker login ${{ env.registryName }}.azurecr.io --username ${{ steps.createACR.outputs.acr_username }} --password ${{ steps.createACR.outputs.acr_password }}
         docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
         docker push ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
  
