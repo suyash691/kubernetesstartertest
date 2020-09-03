@@ -11,7 +11,7 @@ env:
   registrySku: "Basic"
   registryName: "testregistryformycontainerwithdevops"
   registryLocation: "South Central US"
-  clusterName:"kubernetesdevopsstartertest"
+  clusterName: "kubernetesdevopsstartertest"
   appInsightsLocation: "South Central US"
   clusterLocation: "South Central US"
   agentCount: 3
