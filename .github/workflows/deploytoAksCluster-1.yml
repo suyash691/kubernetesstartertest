@@ -46,3 +46,4 @@ jobs:
         login-server: ${{ env.registryName }}.azurecr.io
         username: ${{ steps.getACRCredentials.outputs.acrusername }}
         password: ${{ steps.getACRCredentials.outputs.acrpassword }}
+
