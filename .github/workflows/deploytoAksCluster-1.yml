@@ -37,7 +37,7 @@ jobs:
     - name: Create Kubernetes
       uses: azure/CLI@v1
       continue-on-error: false
-        with:
+      with:
           inlineScript: |
              az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}" 
     - name: Create container registry
