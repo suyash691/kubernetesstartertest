@@ -62,9 +62,11 @@ jobs:
         docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
         docker push ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
   deploy:
+    needs: build
     name: Setup kube and deploy the app to kube
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Create Kube
         uses: azure/CLI@v1
         continue-on-error: false
