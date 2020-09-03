@@ -46,7 +46,7 @@ jobs:
       with:
         login-server: ${{ env.registryName }}.azurecr.io
         username: ${{ steps.createACR.outputs.acr_username }}
-        password: ${{ steps.createACR.outputs.acr_username }}
+        password: ${{ steps.createACR.outputs.acr_password }}
     - name: Build and push image to ACR
       id: build-image
       run: |
