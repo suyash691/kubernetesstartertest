@@ -86,10 +86,10 @@
                         "count": "[parameters('agentCount')]",
                         "vmSize": "[parameters('agentVMSize')]"
                     }
-                ],
-                "identity": {
-                    "type": "SystemAssigned"
-                }
+                ]
+            },
+            "identity": {
+                "type": "SystemAssigned"
             }
         },
         {
