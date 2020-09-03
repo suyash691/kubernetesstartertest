@@ -30,4 +30,4 @@ jobs:
       continue-on-error: false
       with:
         inlineScript: |
-          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./armTemplates/containerRegistry-template.json --parameters  registryName=="${{ env.registryName }}" registryLocation="${{ env.registryLocation }}"  registrySku="${{ env.SKU }}"
+          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/containerRegistry-template.json --parameters  registryName=="${{ env.registryName }}" registryLocation="${{ env.registryLocation }}"  registrySku="${{ env.SKU }}"
