@@ -38,6 +38,8 @@ jobs:
       continue-on-error: false
       with:
           inlineScript: |
+             echo "::set-output name=spn_username::`jq '.clientId' ${{ secrets.AZURE_CREDENTIALS }}`"
+             echo "::set-output name=spn_password::`jq '.clientSecret' ${{ secrets.AZURE_CREDENTIALS }}`"
              az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}"
     # Deploy ARM template for container registry
     - name: Create container registry
