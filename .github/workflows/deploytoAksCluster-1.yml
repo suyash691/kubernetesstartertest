@@ -77,6 +77,23 @@ jobs:
         container-registry-username: ${{ steps.createACR.outputs.acr_username }}
         container-registry-password: ${{ steps.createACR.outputs.acr_password }}
         secret-name: ${{ env.clusterName }}dockerauth
+    - name: Update service manifest file
+      uses: microsoft/variable-substitution@v1 
+      with:
+        files: './manifests/service-1.yml'
+      env:
+        metadata.name: ${{ env.clusterName }}
+        metadata.labels.app: ${{ env.clusterName }}
+        spec.selector.app: ${{ env.clusterName }}
+    - name: Update deployment manifest file
+      uses: microsoft/variable-substitution@v1 
+      with:
+        files: './manifests/deployment-1.yml'
+      env:
+        metadata.name: ${{ env.clusterName }}
+        spec.template.metadata.labels.app: ${{ env.clusterName }}
+        spec.template.spec.containers.name: ${{ env.clusterName }}
+        spec.template.spec.containers.image: ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}
     - uses: azure/k8s-deploy@v1
       with:
         namespace: ${{ env.clusterName }}
