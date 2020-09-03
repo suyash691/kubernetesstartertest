@@ -41,7 +41,7 @@ jobs:
           inlineScript: |
              echo "::set-output name=spn_username::`echo '${{ secrets.AZURE_CREDENTIALS }}' | jq '.clientId' `"
              echo "::set-output name=spn_password::`echo '${{ secrets.AZURE_CREDENTIALS }}' | jq '.clientSecret'`"
-             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}" servicePrincipalClientId="${{ steps.createKubernetes.outputs.spn_username }}" servicePrincipalClientSecret="${{ steps.createKubernetes.outputs.spn_password }}"
+             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}"
     # Deploy ARM template for container registry
     - name: Create container registry
       id: createACR
