@@ -1,6 +1,12 @@
-on: [push]
+name: Build and Deploy node Express app to azure
+on:
+  push:
+    branches:
+      - master
+
 jobs:
-  build-and-deploy:
+  build:
+    name: Build and Run tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
@@ -16,7 +22,9 @@ jobs:
       run: |
         docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t aksnettagtest1acr.azurecr.io/helloworld:${{ github.sha }}
         docker push aksnettagtest1acr.azurecr.io/helloworld:${{ github.sha }}
-    
+  Deploy:
+    name: Deploy to azure web app
+    needs: build
     - uses: azure/k8s-set-context@v1
       with:
          kubeconfig: ${{ secrets.aks_helloworld_kubeConfig }}
