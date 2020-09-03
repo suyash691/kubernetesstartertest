@@ -8,7 +8,7 @@ env:
   RESOURCEGROUPNAME: "devopsstarter-kubestest-rg"
   LOCATION: "South Central US"
   registrySku: "Basic"
-  registryName: "testregistry"
+  registryName: "testregistryformycontainerwithdevops"
   registryLocation: "South Central US"
 
 jobs:
