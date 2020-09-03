@@ -30,7 +30,19 @@ jobs:
       with:
         inlineScript: |
           az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/containerRegistry-template.json --parameters  registryName="${{ env.registryName }}" registryLocation="${{ env.registryLocation }}"  registrySku="${{ env.registrySku }}"
+    - name: Set ACR username and password
+      id: getACRCredentials
+      uses: azure/CLI@v1
+      continue-on-error: false
+      with:
+        inlineScript: |
+          echo "::set-output name=acrusername::`az acr credential show -n ${{ env.registryName }} --query username`"
+          echo "::add-mask::`az acr credential show -n ${{ env.registryName }} --query username`"
+          echo "::set-output name=acrpassword::`az acr credential show -n MyRegistry --query passwords[0].value`"
+          echo "::add-mask::`az acr credential show -n MyRegistry --query passwords[0].value`"
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
         login-server: ${{ env.registryName }}.azurecr.io
+        username: ${{ steps.getACRCredentials.outputs.acrusername }}
+        password: ${{ steps.getACRCredentials.outputs.acrpassword }}
