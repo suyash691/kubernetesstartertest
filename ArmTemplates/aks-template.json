@@ -92,7 +92,11 @@
                         "count": "[parameters('agentCount')]",
                         "vmSize": "[parameters('agentVMSize')]"
                     }
-                ]
+                ],
+                "servicePrincipalProfile": {
+                    "clientId": "[parameters('servicePrincipalClientId')]",
+                    "secret": "[parameters('servicePrincipalClientSecret')]"
+                }
             }
         },
         {
