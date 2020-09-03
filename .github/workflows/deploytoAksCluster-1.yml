@@ -35,11 +35,9 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     # Deploy ARM template for container registry
     - name: Create container registry
-      uses: azure/CLI@v1
       id: createACR
       continue-on-error: false
-      with:
-        inlineScript: |
+      run: |
           az acr create -n ${{ env.registryName }} -g ${{ env.RESOURCEGROUPNAME }} --location "${{env.registryLocation}}" --sku ${{env.registrySku}} --admin-enabled
           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username | xargs`"
           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value | xargs`"
