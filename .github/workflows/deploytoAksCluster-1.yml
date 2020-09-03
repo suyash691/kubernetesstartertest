@@ -45,8 +45,8 @@ jobs:
       uses: azure/docker-login@v1
       with:
         login-server: ${{ env.registryName }}.azurecr.io
-        username: ${{ steps.createACR.outputs.acrusername }}
-        password: ${{ steps.createACR.outputs.acrpassword }}
+        username: ${{ steps.createACR.outputs.acr_username }}
+        password: ${{ steps.createACR.outputs.acr_username }}
     - name: Build and push image to ACR
       id: build-image
       run: |
