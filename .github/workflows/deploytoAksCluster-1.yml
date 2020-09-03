@@ -4,55 +4,30 @@ on:
     branches:
       - master
 
+env:
+  RESOURCEGROUPNAME: "devopsstarter-kubestest-rg"
+  SKU: "S1 Standard"
+  LOCATION: "South Central US"
+  registrySku: "Basic"
+  registryName: "testregistry"
+  registryLocation: "South Central US"
+
 jobs:
   build:
     name: Build and Run tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    
-    - uses: azure/docker-login@v1
+    - uses: actions/checkout@v2
+    # login to azure
+    - name: Login to Azure
+      uses: azure/login@v1
+      continue-on-error: false
       with:
-        login-server: aksnettagtest1acr.azurecr.io
-        username: ${{ secrets.acr_aksnettagtest1acr_username }}
-        password: ${{ secrets.acr_aksnettagtest1acr_password }}
-    
-    - name: Build and push image to ACR
-      id: build-image
-      run: |
-        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t aksnettagtest1acr.azurecr.io/helloworld:${{ github.sha }}
-        docker push aksnettagtest1acr.azurecr.io/helloworld:${{ github.sha }}
-  Deploy:
-    name: Deploy to azure web app
-    needs: build
-    - uses: azure/k8s-set-context@v1
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    # Deploy ARM template
+    - name: Deploy ARM Template
+      uses: azure/CLI@v1
+      continue-on-error: false
       with:
-         kubeconfig: ${{ secrets.aks_helloworld_kubeConfig }}
-      id: login
-    
-    - name: Create namespace
-      run: |
-        namespacePresent=`kubectl get namespace | grep helloworldab51 | wc -l`
-        if [ $namespacePresent -eq 0 ]
-        then
-            echo `kubectl create namespace helloworldab51`
-        fi
-
-    - uses: azure/k8s-create-secret@v1
-      with:
-        namespace: helloworldab51
-        container-registry-url: aksnettagtest1acr.azurecr.io
-        container-registry-username: ${{ secrets.acr_aksnettagtest1acr_username }}
-        container-registry-password: ${{ secrets.acr_aksnettagtest1acr_password }}
-        secret-name: helloworlddockerauth
-       
-    - uses: azure/k8s-deploy@v1
-      with:
-        namespace: helloworldab51
-        manifests: |
-          manifests/deployment-1.yml
-          manifests/service-1.yml
-        images: |
-          aksnettagtest1acr.azurecr.io/helloworld:${{ github.sha }}
-        imagepullsecrets: |
-          helloworlddockerauth
+        inlineScript: |
+          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./armTemplates/containerRegistry-template.json --parameters  registryName=="${{ env.registryName }}" registryLocation="${{ env.registryLocation }}"  registrySku="${{ env.SKU }}"
