@@ -36,24 +36,19 @@ jobs:
     # Deploy ARM template for container registry
     - name: Create container registry
       uses: azure/CLI@v1
+      id: createACR
       continue-on-error: false
       with:
         inlineScript: |
           az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/containerRegistry-template.json --parameters  registryName="${{ env.registryName }}" registryLocation="${{ env.registryLocation }}"  registrySku="${{ env.registrySku }}"
-    - name: Set ACR username and password
-      id: getACRCredentials
-      uses: azure/CLI@v1
-      continue-on-error: false
-      with:
-        inlineScript: |
-          echo "::set-output name=acrusername::`az acr credential show -n ${{ env.registryName }} --query username`"
-          echo "::set-output name=acrpassword::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
+          echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username | xargs`"
+          echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value | xargs`"
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
         login-server: ${{ env.registryName }}.azurecr.io
-        username: ${{ steps.getACRCredentials.outputs.acrusername }}
-        password: ${{ steps.getACRCredentials.outputs.acrpassword }}
+        username: ${{ steps.createACR.outputs.acrusername }}
+        password: ${{ steps.createACR.outputs.acrpassword }}
     - name: Build and push image to ACR
       id: build-image
       run: |
