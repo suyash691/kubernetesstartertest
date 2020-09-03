@@ -55,5 +55,34 @@ jobs:
       run: |
         docker login ${{ env.registryName }}.azurecr.io --username ${{ steps.createACR.outputs.acr_username }} --password ${{ steps.createACR.outputs.acr_password }}
         docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
-        docker push ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
+        docker push ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
  
+  deploy:
+    name: Deploy application to AKS
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep ${{ env.clusterName }} | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace ${{ env.clusterName }}`
+        fi
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: ${{ env.clusterName }}
+        container-registry-url: ${{ env.registryName }}.azurecr.io
+        container-registry-username: ${{ steps.createACR.outputs.acr_username }}
+        container-registry-password: ${{ steps.createACR.outputs.acr_password }}
+        secret-name: ${{ env.clusterName }}dockerauth
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: ${{ env.clusterName }}
+        manifests: |
+          manifests/deployment-1.yml
+          manifests/service-1.yml
+        images: |
+          ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
+        imagepullsecrets: |
+          ${{ env.clusterName }}dockerauth
