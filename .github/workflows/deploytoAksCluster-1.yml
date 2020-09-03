@@ -40,7 +40,7 @@ jobs:
       continue-on-error: false
       with:
         inlineScript: |
-          az acr create -n {{ env.registryName }} -g {{ env.RESOURCEGROUPNAME }} --location "{{env.registryLocation}}" --sku {{env.registrySku}} --admin-enabled
+          az acr create -n ${{ env.registryName }} -g ${{ env.RESOURCEGROUPNAME }} --location "${{env.registryLocation}}" --sku ${{env.registrySku}} --admin-enabled
           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username | xargs`"
           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value | xargs`"
     - name: Login to ACR
