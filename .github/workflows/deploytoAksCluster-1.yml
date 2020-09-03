@@ -1,19 +1,29 @@
-name: Build and Deploy node Express app to azure
+name: Build and Deploy node Express app to container
 on:
   push:
     branches:
       - master
 
 env:
+  appname: "kubernetesdevopsstartertest"
   RESOURCEGROUPNAME: "devopsstarter-kubestest-rg"
   LOCATION: "South Central US"
   registrySku: "Basic"
   registryName: "testregistryformycontainerwithdevops"
   registryLocation: "South Central US"
+  clusterName:"kubernetesdevopsstartertest"
+  appInsightsLocation: "South Central US"
+  clusterLocation: "South Central US"
+  agentCount: 3
+  agentVMSize: "Standard_DS2_v2"
+  kubernetesVersion: 1.15.11
+  omsLocation: "South Central US"
+  omsWorkspaceName: "kubernetesdevopsstartertest"
+  httpApplicationRoutingEnabled: false
 
 jobs:
   build:
-    name: Build and Run tests
+    name: Build and push to container registry
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -23,8 +33,8 @@ jobs:
       continue-on-error: false
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-    # Deploy ARM template
-    - name: Deploy ARM Template
+    # Deploy ARM template for container registry
+    - name: Create container registry
       uses: azure/CLI@v1
       continue-on-error: false
       with:
@@ -46,4 +56,18 @@ jobs:
         login-server: ${{ env.registryName }}.azurecr.io
         username: ${{ steps.getACRCredentials.outputs.acrusername }}
         password: ${{ steps.getACRCredentials.outputs.acrpassword }}
-
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
+        docker push ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
+  deploy:
+    name: Setup kube and deploy the app to kube
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Kube
+        uses: azure/CLI@v1
+        continue-on-error: false
+        with:
+          inlineScript: |
+             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}" 
