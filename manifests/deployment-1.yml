@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "helloworld-53b7"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "helloworld-53b7"
+    spec:
+      containers:
+        - name: "helloworld-53b7"
+          image: "aksnettagtest1acr.azurecr.io/helloworld"
+          ports:
+          - containerPort: 8080
