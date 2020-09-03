@@ -34,6 +34,12 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     # Deploy ARM template for container registry
+    - name: Create Kubernetes
+      uses: azure/CLI@v1
+      continue-on-error: false
+        with:
+          inlineScript: |
+             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}" 
     - name: Create container registry
       id: createACR
       continue-on-error: false
@@ -50,17 +56,6 @@ jobs:
     - name: Build and push image to ACR
       id: build-image
       run: |
-        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
+        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
         docker push ${{ env.registryName }}.azurecr.io/${{ env.appname }}:${{ github.sha }}
-  deploy:
-    needs: build
-    name: Setup kube and deploy the app to kube
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Create Kube
-        uses: azure/CLI@v1
-        continue-on-error: false
-        with:
-          inlineScript: |
-             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}" 
+ 
