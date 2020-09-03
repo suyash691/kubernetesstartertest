@@ -33,6 +33,12 @@ jobs:
       continue-on-error: false
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Create Kubernetes
+      uses: azure/CLI@v1
+      continue-on-error: false
+      with:
+          inlineScript: |
+             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}"
     # Deploy ARM template for container registry
     - name: Create container registry
       id: createACR
@@ -41,13 +47,6 @@ jobs:
           az acr create -n ${{ env.registryName }} -g ${{ env.RESOURCEGROUPNAME }} --location "${{env.registryLocation}}" --sku ${{env.registrySku}} --admin-enabled
           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username`"
           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
-    - name: Create Kubernetes
-      uses: azure/CLI@v1
-      continue-on-error: false
-      with:
-          inlineScript: |
-             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}"
-
     - name: Login to ACR
       uses: azure/docker-login@v1
       with:
