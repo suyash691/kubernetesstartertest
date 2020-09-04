@@ -71,14 +71,12 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Get AKS Credentials
       uses: azure/CLI@v1
+      id: getContext
       continue-on-error: false
       with:
           inlineScript: |
             az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file $GITHUB_WORKSPACE/kubeconfig
-    - name: Get Context as environment variable
-      id: getContext
-      run: |
-        echo "::set-output name=kubeconfig::`cat $GITHUB_WORKSPACE/kubeconfig`"
+            echo "::set-output name=kubeconfig::`cat $GITHUB_WORKSPACE/kubeconfig`"
     - uses: azure/k8s-set-context@v1
       with:
         method: kubeconfig
