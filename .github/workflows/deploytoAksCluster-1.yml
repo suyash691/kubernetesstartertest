@@ -76,15 +76,7 @@ jobs:
       with:
           inlineScript: |
             az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file $GITHUB_WORKSPACE/kubeconfig
-            echo "::set-output name=kubeconfig::`cat $GITHUB_WORKSPACE/kubeconfig`"
-    - name: test
-      run: |
-        echo "${{ steps.getContext.outputs.kubeconfig }}"
-    - uses: azure/k8s-set-context@v1
-      with:
-        method: kubeconfig
-        kubeconfig:  "${{ steps.getContext.outputs.kubeconfig }}"
-      id: setcontext
+            echo "::set-env name=KUBECONFIG::$GITHUB_WORKSPACE/kubeconfig"
     - name: Create namespace
       run: |
         namespacePresent=`kubectl get namespace | grep ${{ env.clusterName }} | wc -l`
