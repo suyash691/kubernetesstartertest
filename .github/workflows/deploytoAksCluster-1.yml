@@ -78,7 +78,7 @@ jobs:
     - name: Get Context as environment variable
       id: getContext
       run: |
-        echo "::set-output name=kubeconfig::`echo ~/.kube/config`"
+        echo "::set-output name=kubeconfig::`cat ~/.kube/config`"
     - uses: azure/k8s-set-context@v1
       with:
         method: kubeconfig
