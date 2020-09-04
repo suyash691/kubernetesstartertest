@@ -61,7 +61,7 @@ jobs:
       with:
         renderEngine: 'helm'
         helmChart: './Application/charts/sampleapp' 
-        overrideFiles: './aks-helloworld/values.yaml'
+        overrideFiles: './Application/charts/sampleapp/values.yaml'
         overrides: |     
             image.repository: ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}
             image.tag: ${{ github.sha }}
