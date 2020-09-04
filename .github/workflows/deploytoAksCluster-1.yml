@@ -70,13 +70,10 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Get AKS Credentials
-      uses: azure/CLI@v1
       id: getContext
-      continue-on-error: false
-      with:
-          inlineScript: |
-            az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file $GITHUB_WORKSPACE/kubeconfig
-            echo "::set-env name=KUBECONFIG::$GITHUB_WORKSPACE/kubeconfig"
+      run: |
+          az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file $GITHUB_WORKSPACE/kubeconfig
+          echo "::set-env name=KUBECONFIG::$GITHUB_WORKSPACE/kubeconfig"
     - name: Create namespace
       run: |
         namespacePresent=`kubectl get namespace | grep ${{ env.clusterName }} | wc -l`
