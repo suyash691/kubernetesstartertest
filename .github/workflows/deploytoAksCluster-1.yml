@@ -70,6 +70,7 @@ jobs:
         then
             echo `kubectl create namespace ${{ env.clusterName }}`
         fi
+        az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }}
     - uses: azure/k8s-create-secret@v1
       with:
         namespace: ${{ env.clusterName }}
