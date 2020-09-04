@@ -63,6 +63,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      # login to azure
+    - name: Login to Azure
+      uses: azure/login@v1
+      continue-on-error: false
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Get AKS Credentials
+      uses: azure/CLI@v1
+      continue-on-error: false
+      with:
+          inlineScript: |
+            az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }}
+    - name: Get Context as environment variable
+      id: getContext
+      run: |
+        echo "::set-output name=kubeconfig::`echo ~/.kube/config`"
+    - uses: azure/k8s-set-context@v1
+      with:
+        method: kubeconfig
+        kubeconfig:  ${{ steps.getContext.outputs.kubeconfig }}
+      id: setcontext
     - name: Create namespace
       run: |
         namespacePresent=`kubectl get namespace | grep ${{ env.clusterName }} | wc -l`
@@ -70,12 +91,6 @@ jobs:
         then
             echo `kubectl create namespace ${{ env.clusterName }}`
         fi
-    - name: Create Kubernetes
-      uses: azure/CLI@v1
-      continue-on-error: false
-      with:
-          inlineScript: |
-            az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }}
     - uses: azure/k8s-create-secret@v1
       with:
         namespace: ${{ env.clusterName }}
