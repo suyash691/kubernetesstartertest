@@ -74,11 +74,11 @@ jobs:
       continue-on-error: false
       with:
           inlineScript: |
-            az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file ./kubeconfig
+            az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file ./Application/kubeconfig
     - name: Get Context as environment variable
       id: getContext
       run: |
-        echo "::set-output name=kubeconfig::`cat ./kubeconfig`"
+        echo "::set-output name=kubeconfig::`cat ./Application/kubeconfig`"
     - uses: azure/k8s-set-context@v1
       with:
         method: kubeconfig
