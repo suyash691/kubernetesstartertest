@@ -110,6 +110,10 @@ jobs:
             applicationInsights.InstrumentationKey: ${{ steps.GetAppInsightsKey.outputs.AIKey }}
         helm-version: 'latest' 
         silent: 'false'
+    - uses: actions/upload-artifact@v2
+      with:
+        name: manifestyml
+        path: ${{ steps.bakeManifests.outputs.manifestsBundle }}
     - uses: azure/k8s-deploy@v1
       with:
         namespace: ${{ env.clusterName }}
