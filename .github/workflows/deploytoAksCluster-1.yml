@@ -103,7 +103,8 @@ jobs:
         renderEngine: 'helm'
         helmChart: './Application/charts/sampleapp' 
         overrideFiles: './Application/charts/sampleapp/values.yaml'
-        overrides: |     
+        overrides: |
+            fullnameOverride: ${{ env.clusterName }}
             image.repository: ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}
             image.tag: ${{ github.sha }}
             imagepullsecrets:[${{ env.clusterName }}dockerauth]
