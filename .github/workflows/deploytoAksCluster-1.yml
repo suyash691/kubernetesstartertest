@@ -94,6 +94,7 @@ jobs:
         container-registry-password: ${{ steps.getACRCred.outputs.acr_password }}
         secret-name: ${{ env.clusterName }}dockerauth
     - uses: azure/k8s-bake@v1
+      id: bakeManifests
       with:
         renderEngine: 'helm'
         helmChart: './Application/charts/sampleapp' 
@@ -104,13 +105,12 @@ jobs:
             imagepullsecrets:[${{ env.clusterName }}dockerauth]
         helm-version: 'latest' 
         silent: 'false'
-        manifestsBundle: $GITHUB_WORKSPACE
     - uses: azure/k8s-deploy@v1
       with:
         namespace: ${{ env.clusterName }}
         manifests: |
-          $GITHUB_WORKSPACE/deployment.yml
-          $GITHUB_WORKSPACE/service.yml
+          ${{ steps.bakeManifests.outputs.manifestsBundle }}/deployment.yml
+          ${{ steps.bakeManifests.outputs.manifestsBundle }}/service.yml
         images: |
           ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
         imagepullsecrets: |
