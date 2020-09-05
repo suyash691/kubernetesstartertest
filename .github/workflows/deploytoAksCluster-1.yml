@@ -93,6 +93,10 @@ jobs:
         container-registry-username: ${{ steps.getACRCred.outputs.acr_username }}
         container-registry-password: ${{ steps.getACRCred.outputs.acr_password }}
         secret-name: ${{ env.clusterName }}dockerauth
+    - name: Fetch Application insights key
+      id: GetAppInsightsKey
+      run: |
+        echo "::set-output name=AIKey::`az monitor app-insights api-key show --app ${{ env.clusterName } --resource-group ${{ env.RESOURCEGROUPNAME }}`"
     - uses: azure/k8s-bake@v1
       id: bakeManifests
       with:
@@ -103,6 +107,7 @@ jobs:
             image.repository: ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}
             image.tag: ${{ github.sha }}
             imagepullsecrets:[${{ env.clusterName }}dockerauth]
+            applicationInsights.InstrumentationKey: ${{ steps.GetAppInsightsKey.outputs.AIKey }}
         helm-version: 'latest' 
         silent: 'false'
     - uses: azure/k8s-deploy@v1
