@@ -108,9 +108,7 @@ jobs:
     - uses: azure/k8s-deploy@v1
       with:
         namespace: ${{ env.clusterName }}
-        manifests: |
-          ${{ steps.bakeManifests.outputs.manifestsBundle }}/deployment.yml
-          ${{ steps.bakeManifests.outputs.manifestsBundle }}/service.yml
+        manifests: ${{ steps.bakeManifests.outputs.manifestsBundle }}
         images: |
           ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
         imagepullsecrets: |
