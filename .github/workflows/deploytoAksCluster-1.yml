@@ -108,8 +108,8 @@ jobs:
       with:
         namespace: ${{ env.clusterName }}
         manifests: |
-          manifests/deployment-1.yml
-          manifests/service-1.yml
+          sampleapp/templates/deployment.yml
+          sampleapp/templates/service.yml
         images: |
           ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
         imagepullsecrets: |
