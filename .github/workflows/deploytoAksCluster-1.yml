@@ -33,6 +33,42 @@ jobs:
       continue-on-error: false
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Create Kubernetes
+      uses: azure/CLI@v1
+      id: createKubernetes
+      continue-on-error: false
+      with:
+          inlineScript: |
+             echo "::set-output name=spn_username::`echo '${{ secrets.AZURE_CREDENTIALS }}' | jq '.clientId' `"
+             echo "::set-output name=spn_password::`echo '${{ secrets.AZURE_CREDENTIALS }}' | jq '.clientSecret'`"
+             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}"
+    # Deploy ARM template for container registry
+    - name: Create container registry
+      id: createACR
+      continue-on-error: false
+      run: |
+          az acr create -n ${{ env.registryName }} -g ${{ env.RESOURCEGROUPNAME }} --location "${{env.registryLocation}}" --sku ${{env.registrySku}} --admin-enabled
+          echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username`"
+          echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker login ${{ env.registryName }}.azurecr.io --username ${{ steps.createACR.outputs.acr_username }} --password ${{ steps.createACR.outputs.acr_password }}
+        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
+        docker push ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
+ 
+  deploy:
+    name: Deploy application to AKS
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      # login to azure
+    - name: Login to Azure
+      uses: azure/login@v1
+      continue-on-error: false
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Get AKS Credentials
       id: getContext
       run: |
@@ -68,3 +104,13 @@ jobs:
             imagepullsecrets:[${{ env.clusterName }}dockerauth]
         helm-version: 'latest' 
         silent: 'false'
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: ${{ env.clusterName }}
+        manifests: |
+          manifests/deployment-1.yml
+          manifests/service-1.yml
+        images: |
+          ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
+        imagepullsecrets: |
+          ${{ env.clusterName }}dockerauth
