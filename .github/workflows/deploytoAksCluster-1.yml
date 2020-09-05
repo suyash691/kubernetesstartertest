@@ -106,7 +106,7 @@ jobs:
         overrides: |
             image.repository:${{ env.registryName }}.azurecr.io/${{ env.clusterName }}
             image.tag:${{ github.sha }}
-            imagepullsecrets:{${{ env.clusterName }}dockerauth}
+            imagePullSecrets:{${{ env.clusterName }}dockerauth}
             applicationInsights.InstrumentationKey:${{ steps.GetAppInsightsKey.outputs.AIKey }}
         helm-version: 'latest' 
         silent: 'false'
