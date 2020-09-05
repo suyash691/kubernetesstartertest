@@ -84,8 +84,8 @@ jobs:
     - name: Get ACR credentials
       id: getACRCred
       run: |
-           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username`"
-           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
+           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username | xargs`"
+           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value | xargs`"
     - uses: azure/k8s-create-secret@v1
       with:
         namespace: ${{ env.clusterName }}
