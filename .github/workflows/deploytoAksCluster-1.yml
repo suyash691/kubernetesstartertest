@@ -104,12 +104,13 @@ jobs:
             imagepullsecrets:[${{ env.clusterName }}dockerauth]
         helm-version: 'latest' 
         silent: 'false'
+        manifestsBundle: $GITHUB_WORKSPACE
     - uses: azure/k8s-deploy@v1
       with:
         namespace: ${{ env.clusterName }}
         manifests: |
-          sampleapp/templates/deployment.yml
-          sampleapp/templates/service.yml
+          $GITHUB_WORKSPACE/deployment.yml
+          $GITHUB_WORKSPACE/service.yml
         images: |
           ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
         imagepullsecrets: |
