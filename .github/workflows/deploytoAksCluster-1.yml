@@ -96,7 +96,7 @@ jobs:
     - name: Fetch Application insights key
       id: GetAppInsightsKey
       run: |
-        echo "::set-output name=AIKey::`az monitor app-insights api-key show --app ${{ env.clusterName } --resource-group ${{ env.RESOURCEGROUPNAME }}`"
+        echo "::set-output name=AIKey::`az resource show -g ${{ env.RESOURCEGROUPNAME }} -n ${{ env.clusterName }} --resource-type "Microsoft.Insights/components" --query "properties.InstrumentationKey" -o tsv`"
     - uses: azure/k8s-bake@v1
       id: bakeManifests
       with:
