@@ -13,12 +13,20 @@ console.log("Redis Client created");
 /* GET home page. */
 router.get('/', function (req, res) {
   console.log("Index route");
-  client.incr('viewCount', (err, incrementedValue) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    res.render('index', { message: "Total Visits: " + incrementedValue }); 
+  client.exists('viewCount',function(err,reply) {
+        if(!err) {
+            if(reply === 1) {
+                client.incr('viewCount', (err, incrementedValue) => {
+                  if (err) {
+                  console.log(err);
+                  return;
+                }
+                res.render('index', { message: "Total Visits: " + incrementedValue }); 
+                });
+            } else {
+                client.set('viewCount', 1)
+            }
+        }
     });
 });
 
