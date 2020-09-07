@@ -66,7 +66,7 @@ app.use(function (err, req, res, next) {
 app.set('port', process.env.PORT || 8080);
 
 var server = app.listen(app.get('port'), function () {
-    redisClient.exists('viewCount',function(err,reply) {
+    client.exists('viewCount',function(err,reply) {
         if(!err) {
             if(reply === 1) {
                 debug("Key exists");
