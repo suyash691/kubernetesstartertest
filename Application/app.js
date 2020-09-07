@@ -9,6 +9,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var redis = require('ioredis');
+var redisServer = process.env.redis_server || 'redis-cache';
 
 var appInsights = require('applicationinsights');
 appInsights.setup();
