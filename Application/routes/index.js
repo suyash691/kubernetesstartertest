@@ -13,9 +13,9 @@ console.log("Redis Client created");
 /* GET home page. */
 router.get('/', function (req, res) {
   console.log("Index route");
-  client.incr('viewCount', function (err, result) {
-    res.render('index', { message: "Total Visits: " + result });
-  });
+  client.incrAsync('viewCount').then(result => {
+      res.render('index', { message: "Total Visits: " + result });
+    });
 });
 
 module.exports = router;
