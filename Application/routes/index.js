@@ -13,8 +13,12 @@ console.log("Redis Client created");
 /* GET home page. */
 router.get('/', function (req, res) {
   console.log("Index route");
-  client.incrAsync('viewCount').then(result => {
-      res.render('index', { message: "Total Visits: " + result });
+  client.incr('viewCount', (err, incrementedValue) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.render('index', { message: "Total Visits: " + incrementedValue }); 
     });
 });
 
