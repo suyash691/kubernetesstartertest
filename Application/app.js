@@ -8,12 +8,14 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var redis = require('ioredis');
 
 var appInsights = require('applicationinsights');
 appInsights.setup();
 appInsights.start();
 
 var app = express();
+var client = redis.createClient(6379, redisServer);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -63,5 +65,14 @@ app.use(function (err, req, res, next) {
 app.set('port', process.env.PORT || 8080);
 
 var server = app.listen(app.get('port'), function () {
+    redisClient.exists('viewCount',function(err,reply) {
+        if(!err) {
+            if(reply === 1) {
+                debug("Key exists");
+            } else {
+                client.set('viewCount', 0)
+            }
+        }
+    });
     debug('Express server listening on port ' + server.address().port);
 });
