@@ -9,10 +9,11 @@ env:
   APPLICATIONPATH: "Application"
   RESOURCEGROUPNAME: "susaluj-devops-existingaks"
   LOCATION: "South Central US"
-  HOSTINGPLAN: "Basic"
+  HOSTINGPLAN: "fnappdevopsstartertest"
   STORAGEACCOUNTNAME: "testsanforfnapp"
   APPINSIGHTSLOCATION: "South Central US"
   PYTHON_VERSION: '3.7.5'
+  SKU: 'Dynamic Y1'
 
 jobs:
   build:
@@ -116,7 +117,7 @@ jobs:
       with:
         inlineScript: |
           az group create --name "${{ env.RESOURCEGROUPNAME }}" --location "${{ env.LOCATION }}"
-          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/python-functionapp-template-consumption.json --parameters functionAppName="${{ env.APPNAME }}" hostingPlanName="${{ env.HOSTINGPLANNAME }}" appInsightsLocation="${{ env.APPINSIGHTSLOCATION }}" storageAccountName="${{ env.STORAGEACCOUNTNAME }}"
+          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/python-functionapp-template-consumption.json --parameters functionAppName="${{ env.APPNAME }}" hostingPlanName="${{ env.HOSTINGPLANNAME }}" appInsightLocation="${{ env.APPINSIGHTSLOCATION }}" storageAccountName="${{ env.STORAGEACCOUNTNAME }}" sku="${{ env.SKU }}"
     - name: 'Run Azure Functions Action'
       uses: Azure/functions-action@v1
       with:
