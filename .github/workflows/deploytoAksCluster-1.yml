@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    name: Build and push to container registry
+    name: Build Application
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -26,10 +26,10 @@ jobs:
       continue-on-error: false
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - name: Use Python $\{{ env.PYTHON_VERSION \}}
+    - name: Use Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v2
       with:
-        python-version: $\{{ env.PYTHON_VERSION \}}
+        python-version: ${{ env.PYTHON_VERSION }}
     - name: Install Dependancies
       continue-on-error: false
       run: |
