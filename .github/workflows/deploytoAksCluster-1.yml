@@ -49,6 +49,11 @@ jobs:
       with:
         name: UnitTestResults
         path: ./testresults/test-results.xml
+    - name: Make directories for artifact upload
+      continue-on-error: false
+      run: |
+        mkdir buildartifacts
+        mkdir deploymenttemplates
     # Archive build artifact
     - name: Archive Application
       uses: montudor/action-zip@v0.1.0
