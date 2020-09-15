@@ -5,21 +5,14 @@ on:
       - master
 
 env:
-  appname: "kubernetesdevopsstartertest"
-  RESOURCEGROUPNAME: "devopsstarter-kubestest-rg"
+  APPNAME: "fnappdevopsstartertest"
+  APPLICATIONPATH: "Application"
+  RESOURCEGROUPNAME: "susaluj-devops-existingaks"
   LOCATION: "South Central US"
-  registrySku: "Basic"
-  registryName: "testregistryformycontainerwithdevops"
-  registryLocation: "South Central US"
-  clusterName: "kubernetesdevopsstartertest"
-  appInsightsLocation: "South Central US"
-  clusterLocation: "South Central US"
-  agentCount: 3
-  agentVMSize: "Standard_DS2_v2"
-  kubernetesVersion: 1.15.11
-  omsLocation: "South Central US"
-  omsWorkspaceName: "kubernetesdevopsstartertest"
-  httpApplicationRoutingEnabled: false
+  HOSTINGPLAN: "Basic"
+  STORAGEACCOUNTNAME: "testsanforfnapp"
+  APPINSIGHTSLOCATION: "South Central US"
+  PYTHON_VERSION: '3.7.5'
 
 jobs:
   build:
@@ -33,29 +26,54 @@ jobs:
       continue-on-error: false
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - name: Create Kubernetes
-      uses: azure/CLI@v1
-      id: createKubernetes
-      continue-on-error: false
+    - name: Use Python $\{{ env.PYTHON_VERSION \}}
+      uses: actions/setup-python@v2
       with:
-          inlineScript: |
-             echo "::set-output name=spn_username::`echo '${{ secrets.AZURE_CREDENTIALS }}' | jq '.clientId' `"
-             echo "::set-output name=spn_password::`echo '${{ secrets.AZURE_CREDENTIALS }}' | jq '.clientSecret'`"
-             az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/aks-template.json --parameters    clusterName="${{ env.clusterName }}" appInsightsLocation="${{ env.appInsightsLocation }}" clusterLocation="${{ env.clusterLocation }}" agentCount="${{ env.agentCount }}" agentVMSize="${{ env.agentVMSize }}" kubernetesVersion="${{ env.kubernetesVersion }}" omsLocation="${{ env.omsLocation }}" omsWorkspaceName="${{ env.omsWorkspaceName }}" httpApplicationRoutingEnabled="${{ env.httpApplicationRoutingEnabled }}"  dnsPrefix="${{ env.clusterName }}"
-    # Deploy ARM template for container registry
-    - name: Create container registry
-      id: createACR
+        python-version: $\{{ env.PYTHON_VERSION \}}
+    - name: Install Dependancies
       continue-on-error: false
       run: |
-          az acr create -n ${{ env.registryName }} -g ${{ env.RESOURCEGROUPNAME }} --location "${{env.registryLocation}}" --sku ${{env.registrySku}} --admin-enabled
-          echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username`"
-          echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value`"
-    - name: Build and push image to ACR
-      id: build-image
+        pushd './${{ env.APPLICATIONPATH }}'
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+        popd
+    - name: Pytest
+      continue-on-error: false
       run: |
-        docker login ${{ env.registryName }}.azurecr.io --username ${{ steps.createACR.outputs.acr_username }} --password ${{ steps.createACR.outputs.acr_password }}
-        docker build "$GITHUB_WORKSPACE/Application" -f  "Application/Dockerfile" -t ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
-        docker push ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
+        mkdir testresults
+        pip install pytest && pytest Tests/unit_tests --junitxml=./testresults/test-results.xml && pip install pycmd && py.cleanup Tests/
+    # Uploading unit test results to artifact store
+    - name: Upload unit test results to Artifact
+      continue-on-error: false
+      uses: actions/upload-artifact@v2
+      with:
+        name: UnitTestResults
+        path: ./testresults/test-results.xml
+    # Archive build artifact
+    - name: Archive Application
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -qq -r ./buildartifacts/Application.zip ./${{ env.APPLICATIONPATH }}
+    # Uploading application to artifact store
+    - name: Upload Application to Build Artifact
+      continue-on-error: false
+      uses: actions/upload-artifact@v2
+      with:
+        name: buildartifacts
+        path: buildartifacts
+    # Archive Arm template
+    - name: Archive ArmTemplates
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -qq -r ./deploymenttemplates/ArmTemplates.zip ./ArmTemplates
+    # Uploading Arm Template to artifact store
+    - name: Upload Arm templates to Artifact
+      continue-on-error: false
+      uses: actions/upload-artifact@v2
+      with:
+        name: deploymenttemplates
+        path: deploymenttemplates
+    
  
   deploy:
     name: Deploy application to AKS
@@ -69,56 +87,35 @@ jobs:
       continue-on-error: false
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - name: Get AKS Credentials
-      id: getContext
-      run: |
-          az aks get-credentials --resource-group ${{ env.RESOURCEGROUPNAME }} --name ${{ env.clusterName }} --file $GITHUB_WORKSPACE/kubeconfig
-          echo "::set-env name=KUBECONFIG::$GITHUB_WORKSPACE/kubeconfig"
-    - name: Create namespace
-      run: |
-        namespacePresent=`kubectl get namespace | grep ${{ env.clusterName }} | wc -l`
-        if [ $namespacePresent -eq 0 ]
-        then
-            echo `kubectl create namespace ${{ env.clusterName }}`
-        fi
-    - name: Get ACR credentials
-      id: getACRCred
-      run: |
-           echo "::set-output name=acr_username::`az acr credential show -n ${{ env.registryName }} --query username | xargs`"
-           echo "::set-output name=acr_password::`az acr credential show -n ${{ env.registryName }} --query passwords[0].value | xargs`"
-    - uses: azure/k8s-create-secret@v1
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v2
+      continue-on-error: false
       with:
-        namespace: ${{ env.clusterName }}
-        container-registry-url: ${{ env.registryName }}.azurecr.io
-        container-registry-username: ${{ steps.getACRCred.outputs.acr_username }}
-        container-registry-password: ${{ steps.getACRCred.outputs.acr_password }}
-        secret-name: ${{ env.clusterName }}dockerauth
-    - name: Fetch Application insights key
-      id: GetAppInsightsKey
-      run: |
-        echo "::set-output name=AIKey::`az resource show -g ${{ env.RESOURCEGROUPNAME }} -n ${{ env.clusterName }} --resource-type "Microsoft.Insights/components" --query "properties.InstrumentationKey" -o tsv`"
-    - uses: azure/k8s-bake@v1
-      id: bakeManifests
+        name: buildartifacts
+        path: buildartifacts
+    - name: Unzipping Build Artifact
+      uses: montudor/action-zip@v0.1.0
       with:
-        renderEngine: 'helm'
-        helmChart: './Application/charts/sampleapp' 
-        overrideFiles: './Application/charts/sampleapp/values.yaml'
-        overrides: |
-            image.repository:${{ env.registryName }}.azurecr.io/${{ env.clusterName }}
-            image.tag:${{ github.sha }}
-            imagePullSecrets:{${{ env.clusterName }}dockerauth}
-            applicationInsights.InstrumentationKey:${{ steps.GetAppInsightsKey.outputs.AIKey }}
-        helm-version: 'latest' 
-        silent: 'false'
-    - uses: actions/upload-artifact@v2
+       args: unzip -qq ./buildartifacts/Application.zip -d .
+    - name: Download Arm Template
+      uses: actions/download-artifact@v2
+      continue-on-error: false
       with:
-        name: manifestyml
-        path: ${{ steps.bakeManifests.outputs.manifestsBundle }}
-    - uses: azure/k8s-deploy@v1
+        name: deploymenttemplates
+        path: deploymenttemplates
+    - name: Unzipping ARM template
+      uses: montudor/action-zip@v0.1.0
       with:
-        namespace: ${{ env.clusterName }}
-        manifests: ${{ steps.bakeManifests.outputs.manifestsBundle }}
-        images: |
-          ${{ env.registryName }}.azurecr.io/${{ env.clusterName }}:${{ github.sha }}
-        imagepullsecrets: |
-          ${{ env.clusterName }}dockerauth
+       args: unzip -qq ./deploymenttemplates/ArmTemplates.zip -d .
+    - name: Deploy ARM Template
+      uses: azure/CLI@v1
+      continue-on-error: false
+      with:
+        inlineScript: |
+          az group create --name "${{ env.RESOURCEGROUPNAME }}" --location "${{ env.LOCATION }}"
+          az deployment group create --resource-group "${{ env.RESOURCEGROUPNAME }}" --template-file ./ArmTemplates/python-functionapp-template-consumption.json --parameters functionAppName="${{ env.APPNAME }}" hostingPlanName="${{ env.HOSTINGPLANNAME }}" appInsightsLocation="${{ env.APPINSIGHTSLOCATION }}" storageAccountName="${{ env.STORAGEACCOUNTNAME }}"
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ env.APPNAME }}
+        package: ${{ env.APPLICATIONPATH }}
